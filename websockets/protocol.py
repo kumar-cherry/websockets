@@ -776,8 +776,11 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
                     "%s - cancelled pending ping%s: %s",
                     self.side, plural, pings_hex)
 
-            # A client should wait for a TCP close from the server.
-            if self.is_client and self.transfer_data_task is not None:
+            # A client should wait for a TCP close from the server,
+            # except when failing the connection.
+            if (self.is_client and
+                    self.transfer_data_task is not None and
+                    not self.transfer_data_task.cancelled()):
                 if (yield from self.wait_for_connection_lost()):
                     return
                 logger.debug(
